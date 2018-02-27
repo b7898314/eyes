@@ -1,0 +1,46 @@
+//比例換算
+        private void 比例校正ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //open.Filter = "(*.jpg)|*.jpg";
+            //if (DialogResult.OK == open.ShowDialog())
+            //{
+            pictureBox3.Image = null;
+            pictureBox4.Image = null;
+            pictureBox1.Image = null;
+
+            /*filename = open.SafeFileName;
+            BMP = (Bitmap)Image.FromFile(open.FileName);*/
+            if (BMP != null)
+            {
+                ?定ToolStripMenuItem_Click(sender, e);
+                Image<Bgr, Byte> img = new Image<Bgr, Byte>(BMP);
+                Image<Bgr, Byte> result = img.Copy();
+                scale(img, ref result);
+                pictureBox1.Image = result.ToBitmap();
+            }
+            else
+                MessageBox.Show("No image!");
+            //}
+        }
+        private void scale(Image<Bgr, Byte> src, ref Image<Bgr, Byte> dest)
+        {
+            CircleF[] closeCircle;
+            double[] std;
+            //example of GeometryDetection 350,300 should be variable!!
+            sectionDetection.GeometryDetection(src, dest, 350, 350, out closeCircle, out std);
+            //example of DrewAllCircle
+            sectionDetection.DrewAllCircle(ref dest, closeCircle);
+            int width = 10;
+            //sectionDetection.ALLDefectDetection(src, dest, closeCircle);
+            System.Drawing.Rectangle ROIrectangle = new System.Drawing.Rectangle((int)(closeCircle[0].Center.X - closeCircle[0].Radius - width), (int)(closeCircle[0].Center.Y - closeCircle[0].Radius - width), (int)(closeCircle[0].Radius + width) * 2, (int)(closeCircle[0].Radius + width) * 2);
+            src.ROI = ROIrectangle;
+            dest.ROI = ROIrectangle;
+            //比例因子
+            label10.Visible = true;
+            Factor_Value = 25 / closeCircle[2].Radius;
+            factor.Left = label10.Right + 5;
+            factor.Text = Factor_Value.ToString("f3") + "mm/pixel";
+        }
+/////////
+////////
+/////////
