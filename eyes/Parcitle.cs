@@ -362,6 +362,7 @@ namespace SomeCalibrations
                     {
                         D_frst = temp;
                         irs = new PointF(x,j);
+                        
                     }
                         
                 }
