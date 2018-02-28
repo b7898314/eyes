@@ -77,7 +77,8 @@ namespace eyes
                     int leftpoint = 0, rightpoint = 0, toppoint = 0, buttonpoint = 0, lefttoppoint = 0, leftdownpoint = 0, righttoppoint = 0, rightdownpoint = 0;
                     int count = contours.Size;
 
-                    
+                    Console.WriteLine("contours.Size"+ contours.Size);
+
                     for (int i = 0; i < count; i++)
                     {
                         using (VectorOfPoint contour = contours[i])
@@ -85,14 +86,14 @@ namespace eyes
                             
                             // 使用 BoundingRectangle 取得框選矩形
                             Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000&& BoundingBox.Y<gray.Height/4)//過濾長寬比太小和面積太小的box
+                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 1000 && (BoundingBox.Width * BoundingBox.Height) < 15000&& BoundingBox.Y<gray.Height/4)//過濾長寬比太小和面積太小的box
                             //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                             {
                                 PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
                                 PointF[] pts = CvInvoke.ConvexHull(temp, true);
                                 Point[] points = new Point[temp.Length];
 
-
+                                Console.WriteLine("in");
 
                                 for (int j = 0; j < temp.Length; j++)//找上下左右端點
                                 {
@@ -224,7 +225,7 @@ namespace eyes
                     gray.ROI = Rectangle.Empty;
                     draw.Bitmap = tempcolorimg;
                     draw.ROI = Rectangle.Empty;
-                    return tempimg;
+                    return tempcolorimg;
                 }
 
             }
@@ -3409,6 +3410,17 @@ namespace eyes
             return result;
 
 
+        }
+
+        private void 眼部黑白ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ScleraPupil_ratio SPr = new ScleraPupil_ratio(My_Image2);
+            Bitmap[] imgs = SPr.GetEyesThreshold();
+            Image<Bgr, Byte>[] imgBgr = SPr.GetEyeImg(My_Image2);
+            imgs[0] = MyCV.BoundingBoxeyebrow(new Image<Gray, byte>(imgs[0]), imgBgr[0]);
+            imgs[1] = MyCV.BoundingBoxeyebrow(new Image<Gray, byte>(imgs[1]), imgBgr[1]);
+            imageBox5.Image = new Image<Bgr, Byte>(imgs[0]);
+            imageBox6.Image = new Image<Bgr,Byte>(imgs[1]);
         }
     }
 }
