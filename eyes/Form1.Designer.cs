@@ -58,6 +58,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.眼部黑白ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox2)).BeginInit();
@@ -73,7 +74,7 @@
             this.toolStripMenuItem1});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1533, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1370, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -90,7 +91,8 @@
             this.toolStripMenuItem9,
             this.toolStripMenuItem10,
             this.toolStripMenuItem11,
-            this.toolStripMenuItem12});
+            this.toolStripMenuItem12,
+            this.眼部黑白ToolStripMenuItem});
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(43, 20);
             this.toolStripMenuItem1.Text = "功能";
@@ -199,7 +201,6 @@
             this.imageBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.imageBox3.TabIndex = 2;
             this.imageBox3.TabStop = false;
-            this.imageBox3.Visible = false;
             // 
             // imageBox4
             // 
@@ -271,7 +272,6 @@
             this.imageBox5.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.imageBox5.TabIndex = 2;
             this.imageBox5.TabStop = false;
-            this.imageBox5.Visible = false;
             // 
             // imageBox6
             // 
@@ -281,7 +281,6 @@
             this.imageBox6.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.imageBox6.TabIndex = 2;
             this.imageBox6.TabStop = false;
-            this.imageBox6.Visible = false;
             // 
             // label5
             // 
@@ -314,11 +313,18 @@
             this.label7.TabIndex = 9;
             this.label7.Text = "            ";
             // 
+            // 眼部黑白ToolStripMenuItem
+            // 
+            this.眼部黑白ToolStripMenuItem.Name = "眼部黑白ToolStripMenuItem";
+            this.眼部黑白ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.眼部黑白ToolStripMenuItem.Text = "眼部黑白";
+            this.眼部黑白ToolStripMenuItem.Click += new System.EventHandler(this.眼部黑白ToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1533, 1029);
+            this.ClientSize = new System.Drawing.Size(1370, 749);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
@@ -382,6 +388,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ToolStripMenuItem 眼部黑白ToolStripMenuItem;
     }
 }
 
