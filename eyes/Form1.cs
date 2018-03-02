@@ -77,8 +77,7 @@ namespace eyes
                     int leftpoint = 0, rightpoint = 0, toppoint = 0, buttonpoint = 0, lefttoppoint = 0, leftdownpoint = 0, righttoppoint = 0, rightdownpoint = 0;
                     int count = contours.Size;
 
-                    Console.WriteLine("contours.Size"+ contours.Size);
-
+                    
                     for (int i = 0; i < count; i++)
                     {
                         using (VectorOfPoint contour = contours[i])
@@ -86,14 +85,14 @@ namespace eyes
                             
                             // 使用 BoundingRectangle 取得框選矩形
                             Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 1000 && (BoundingBox.Width * BoundingBox.Height) < 15000&& BoundingBox.Y<gray.Height/4)//過濾長寬比太小和面積太小的box
+                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000&& BoundingBox.Y<gray.Height/4)//過濾長寬比太小和面積太小的box
                             //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                             {
                                 PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
                                 PointF[] pts = CvInvoke.ConvexHull(temp, true);
                                 Point[] points = new Point[temp.Length];
 
-                                Console.WriteLine("in");
+
 
                                 for (int j = 0; j < temp.Length; j++)//找上下左右端點
                                 {
@@ -225,7 +224,7 @@ namespace eyes
                     gray.ROI = Rectangle.Empty;
                     draw.Bitmap = tempcolorimg;
                     draw.ROI = Rectangle.Empty;
-                    return tempcolorimg;
+                    return tempimg;
                 }
 
             }
@@ -320,6 +319,67 @@ namespace eyes
             form3.Tag = this;
             form3.TopMost = true;
             form3.ShowDialog();//鎖定
+            Bitmap drawface = new Bitmap(pictureBox1.Image);
+
+            StringFormat sf = new StringFormat();//設定string置中，drawString才不會錯位
+            sf.Alignment = StringAlignment.Center;
+            sf.LineAlignment = StringAlignment.Center;
+            SolidBrush drawBrushGreen = new SolidBrush(Color.Green);
+            SolidBrush drawBrushRed = new SolidBrush(Color.Red);
+
+            Graphics g = Graphics.FromImage(drawface);//畫上曲線
+            Pen penred = new Pen(Color.FromArgb(255, 255, 0, 0), 3);
+            Pen pengreen = new Pen(Color.FromArgb(255, 0, 255, 0), 3);
+            int Xsize = 22;//X記號大小
+            
+            //g.DrawLine(pen, 50, 180, 400, 180);
+            g.DrawLine(pengreen, 224, 180, 224, 595);//臉高
+            //三庭
+            g.DrawLine(pengreen, 30, 180, 550, 180);//髮際線
+            g.DrawLine(penred, 30, 318, 550, 318);//眉中心
+            g.DrawLine(pengreen, 30, 449, 550, 449);//鼻中心
+            g.DrawLine(pengreen, 30, 595, 550, 595);//下巴
+            g.DrawString("1/3", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 525, 250, sf);//上臉1/3
+            g.DrawString("1/3", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 525, 385, sf);//中臉1/3
+            g.DrawString("1/3", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 525, 525, sf);//下臉1/3
+            //五眼
+            g.DrawLine(penred, 48, 50, 48, 685);//1/5
+            g.DrawLine(penred, 107, 50, 107, 685);
+            g.DrawLine(penred, 187, 50, 187, 685);
+            g.DrawLine(penred, 267, 50, 267, 685);
+            g.DrawLine(penred, 342, 50, 342, 685);
+            g.DrawLine(penred, 399, 50, 399, 685);
+            g.DrawString("1/5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 80, 667, sf);
+            g.DrawString("1/5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 148, 667, sf);
+            g.DrawString("1/5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 224, 667, sf);
+            g.DrawString("1/5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 305, 667, sf);
+            g.DrawString("1/5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 374, 667, sf);
+            g.DrawString("5", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 187, 357, sf);//右眼眼頭
+            g.DrawString("6", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 267, 357, sf);//左眼眼頭
+            g.DrawString("7", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 107, 346, sf);//右眼眼尾
+            g.DrawString("8", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 48, 347, sf);//右眼髮際線
+            g.DrawString("9", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 342, 349, sf);//左眼眼尾
+            g.DrawString("10", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 399, 347, sf);//左眼髮際線
+
+            g.DrawString("1", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 224, 180, sf);//髮際
+            g.DrawString("11", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 192, 318, sf);//右眉眉頭
+            g.DrawString("12", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 258, 318, sf);//左眉眉頭
+            g.DrawString("2", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 225, 318, sf);//兩眉中心
+            g.DrawString("13", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 84, 309, sf);//右眉眉尾
+            g.DrawString("14", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 365, 312, sf);//左眉眉尾
+            g.DrawString("15", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 110, 290, sf);//右眉眉峰
+            g.DrawString("16", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 342, 296, sf);//左眉眉峰
+            g.DrawString("3", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 224, 449, sf);//鼻中心
+            g.DrawString("17", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 188, 440, sf);//右鼻翼
+            g.DrawString("18", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 263, 440, sf);//左鼻翼
+            g.DrawString("4", new Font("Arial", Xsize, FontStyle.Bold), drawBrushGreen, 224, 595, sf);//下巴中心
+            g.DrawString("19", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 205, 482, sf);//右唇峰
+            g.DrawString("20", new Font("Arial", Xsize, FontStyle.Bold), drawBrushRed, 246, 482, sf);//左唇峰
+
+
+
+            g.Dispose();
+            pictureBox1.Image = drawface;
 
         }
         
@@ -420,7 +480,7 @@ namespace eyes
             //skinimg = skinimg.Erode(1);
             //skinimg = skinimg.Dilate(2);
             //skinimg = skinimg.Erode(2);
-            imageBox1.Image = skinimg;
+            imageBox2.Image = skinimg;
         }
 
         private void toolStripMenuItem5_Click(object sender, EventArgs e)//眉毛
@@ -525,15 +585,15 @@ namespace eyes
 
 
             
-            VectorOfVectorOfPoint contours1 = new VectorOfVectorOfPoint();
-            CvInvoke.FindContours(nosegray, contours1, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
-            int count1 = contours1.Size;
+            VectorOfVectorOfPoint contoursnose = new VectorOfVectorOfPoint();
+            CvInvoke.FindContours(nosegray, contoursnose, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+            int countnose = contoursnose.Size;
 
 
             Rectangle first = Rectangle.Empty, second = Rectangle.Empty;//最大跟第二大物件的座標
-            for (int i = 0; i < count1; i++)//找最大
+            for (int i = 0; i < countnose; i++)//找最大
             {
-                using (VectorOfPoint contour = contours1[i])
+                using (VectorOfPoint contour = contoursnose[i])
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
@@ -542,9 +602,9 @@ namespace eyes
                 }
             }
 
-            for (int i = 0; i < count1; i++)//找第二大
+            for (int i = 0; i < countnose; i++)//找第二大
             {
-                using (VectorOfPoint contour = contours1[i])
+                using (VectorOfPoint contour = contoursnose[i])
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
@@ -978,8 +1038,7 @@ namespace eyes
 
             //    }
             //}
-
-            //Image<Gray, float> Outfloat = Out.Convert<Gray, float>();//二值化後的照片轉float
+            
             Image<Gray, byte> faceskin = new Image<Gray, byte>(skin);
             facecutorigray.Bitmap = facecutorigray.And(faceskin).Bitmap;
 
@@ -992,26 +1051,57 @@ namespace eyes
             //facecutori.ROI = Rectangle.Empty;
             VectorOfVectorOfPoint contours1 = new VectorOfVectorOfPoint();
             
-                // 在這版本請使用FindContours，早期版本有cvFindContours等等，在這版都無法使用，
-                // 由於這邊是要取得最外層的輪廓，所以第三個參數給 null，第四個參數則用 RetrType.External。
                 CvInvoke.FindContours(facecutorigray, contours1, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
                 Bitmap tempimg1 = new Bitmap(facecutorigray.Bitmap);
                 Bitmap tempcolorimg1 = new Bitmap(facecutori.Bitmap);
 
                 int left1 = 2147483647, right1 = 0, top1 = 2147483647, button1 = 0;
-                int lefttop = 2147483647, leftdown = 0, righttop = 2147483647, rightdown = 0;
-                int leftpoint1 = 0, rightpoint1 = 0, toppoint1 = 0, buttonpoint1 = 0, lefttoppoint = 0, leftdownpoint = 0, righttoppoint = 0, rightdownpoint = 0;
+                int leftpoint1 = 0, rightpoint1 = 0, toppoint1 = 0, buttonpoint1 = 0;
                 int count1 = contours1.Size;
 
 
-                for (int i = 0; i < count1; i++)
+            Rectangle firstb = Rectangle.Empty, secondb = Rectangle.Empty;//最大跟第二大物件的座標
+            int bigbrow=0, secondbrow=0;
+            for (int i = 0; i < count1; i++)//找最大
+            {
+                using (VectorOfPoint contour = contours1[i])
+                {
+
+                    Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
+                    if (i == 0) { firstb = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > firstb.Width * firstb.Height) { firstb = BoundingBox; bigbrow = i; }
+                }
+            }
+
+            for (int i = 0; i < count1; i++)//找第二大
+            {
+                using (VectorOfPoint contour = contours1[i])
+                {
+
+                    Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
+                    if (i == 0 && BoundingBox.X != firstb.X && BoundingBox.Y != firstb.Y) { secondb = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > secondb.Width * secondb.Height && BoundingBox.X != firstb.X && BoundingBox.Y != firstb.Y) { secondb = BoundingBox; secondbrow = i; }
+                }
+            }
+
+            if (firstb.X > secondb.X)//如果最大在右邊 交換
+            {
+                Rectangle temprect = firstb;
+                firstb = secondb;
+                secondb = temprect;
+
+                int tempint = bigbrow;
+                bigbrow = secondbrow;
+                secondbrow = tempint;
+            }
+
+            for (int i = 0; i < count1; i++)
                 {
                     using (VectorOfPoint contour = contours1[i])
                     {
-
-                        // 使用 BoundingRectangle 取得框選矩形
+                    
                         Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                        if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < facecutorigray.Height / 4)//過濾長寬比太小和面積太小的box
+                        if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < facecutorigray.Height / 2)//過濾長寬比太小和面積太小的box
                                                                                                                                                                                                                     //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                         {
                             PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
@@ -1049,44 +1139,7 @@ namespace eyes
                             }
 
 
-
-
-                            for (int j = 0; j < temp.Length; j++)
-                            {
-                                if (j > 1 && points[j].X == (points[leftpoint1].X + points[toppoint1].X) / 2 && points[j].Y < lefttop)
-                                {
-                                    lefttop = points[j].Y;
-                                    lefttoppoint = j;
-                                }
-
-                                if (j > 1 && points[j].X == (points[leftpoint1].X + points[buttonpoint1].X) / 2 && points[j].Y > leftdown)
-                                {
-                                    leftdown = points[j].Y;
-                                    leftdownpoint = j;
-                                }
-
-                                if (j > 1 && points[j].X == (points[rightpoint1].X + points[toppoint1].X) / 2 && points[j].Y < righttop)
-                                {
-                                    righttop = points[j].Y;
-                                    righttoppoint = j;
-                                }
-
-                                if (j > 1 && points[j].X == (points[rightpoint1].X + points[buttonpoint1].X) / 2 && points[j].Y > rightdown)
-                                {
-                                    rightdown = points[j].Y;
-                                    rightdownpoint = j;
-                                }
-                            }
-
-                            Point[] pointlefttopright = { points[leftpoint1], points[lefttoppoint], points[toppoint1], points[righttoppoint], points[rightpoint1] };
-                            Point[] pointleftbuttonright = { points[leftpoint1], points[leftdownpoint], points[buttonpoint1], points[rightdownpoint], points[rightpoint1] };
-
-
-
-
-
-
-
+                            
 
                             Point[] subsampling = new Point[points.Length / 15 + 1];
                             for (int j = 0; j < temp.Length; j = j + 15)
@@ -1121,36 +1174,35 @@ namespace eyes
                             sf.Alignment = StringAlignment.Center;
                             sf.LineAlignment = StringAlignment.Center;
 
-                            Graphics g2 = Graphics.FromImage(tempimg1);//畫左點
-                            SolidBrush drawBrush = new SolidBrush(Color.LightGreen);
-                            g2.DrawString("+", new Font("Arial", 25), drawBrush, points[leftpoint1].X, points[leftpoint1].Y, sf);
+                            Graphics g2 = Graphics.FromImage(tempimg1);
+                            SolidBrush drawBrush = new SolidBrush(Color.Green);
+                            Pen pengreen = new Pen(Color.Green,3);
+                            g2.DrawString("+", new Font("Arial", 25), drawBrush, points[leftpoint1].X, points[leftpoint1].Y, sf);//畫左點
+                            g2.DrawString("+", new Font("Arial", 25), drawBrush, points[rightpoint1].X, points[rightpoint1].Y, sf);//畫右點
+                            g2.DrawString("+", new Font("Arial", 25), drawBrush, points[toppoint1].X, points[toppoint1].Y, sf);//畫上點
                             g2.Dispose();
-
-                            Graphics g3 = Graphics.FromImage(tempimg1);//畫右點
-                            g3.DrawString("+", new Font("Arial", 25), drawBrush, points[rightpoint1].X, points[rightpoint1].Y, sf);
-                            g3.Dispose();
+                        
 
 
-                            Graphics g4 = Graphics.FromImage(tempcolorimg1);//畫左點
-                            g4.DrawString("+", new Font("Arial", 25), drawBrush, points[leftpoint1].X, points[leftpoint1].Y, sf);
+                            Graphics g4 = Graphics.FromImage(tempcolorimg1);
+                            g4.DrawString("+", new Font("Arial", 25), drawBrush, points[leftpoint1].X, points[leftpoint1].Y, sf);//畫左點
+                            g4.DrawString("+", new Font("Arial", 25), drawBrush, points[rightpoint1].X, points[rightpoint1].Y, sf);//畫右點
+                            g4.DrawString("+", new Font("Arial", 25), drawBrush, points[toppoint1].X, points[toppoint1].Y, sf);//畫上點
                             g4.Dispose();
-
-                            Graphics g5 = Graphics.FromImage(tempcolorimg1);//畫右點
-                            g5.DrawString("+", new Font("Arial", 25), drawBrush, points[rightpoint1].X, points[rightpoint1].Y, sf);
-                            g5.Dispose();
+                        
                         }
 
 
                     }
-                    left1 = 2147483647; right1 = 0; top1 = 2147483647; button1 = 0; lefttop = 2147483647; leftdown = 0; righttop = 2147483647; rightdown = 0;
-                    leftpoint1 = 0; rightpoint1 = 0; toppoint1 = 0; buttonpoint1 = 0; lefttoppoint = 0; leftdownpoint = 0; righttoppoint = 0; rightdownpoint = 0;
+                    left1 = 2147483647; right1 = 0; top1 = 2147483647; button1 = 0;
+                    leftpoint1 = 0; rightpoint1 = 0; toppoint1 = 0; buttonpoint1 = 0;
                 }
 
                 facecutorigray.Bitmap = tempimg1;
                 facecutorigray.ROI = Rectangle.Empty;
                 facecutori.Bitmap = tempcolorimg1;
                 facecutori.ROI = Rectangle.Empty;
-            
+
             //imageBox2.Image = new Image<Bgr, byte>(MyCV.BoundingBox(facecutorigray, facecutori));
 
 
@@ -1162,18 +1214,58 @@ namespace eyes
 
 
 
+            //鼻子
+            Image<Bgr, byte> nose = My_Image2.Clone();
+            Image<Gray, byte> nosegray = My_Image1.Clone();
+
+            //nosegray.ROI = faces[0];
+
+            nosegray = nosegray.ThresholdBinaryInv(new Gray(80), new Gray(255));
+            Image<Bgr, byte> nosegraytoBgr = nosegray.Convert<Bgr, byte>();
+            //faces[0].X+faces[0].Width/2,faces[0].Y+faces[0].Height/2 中心點座標
+            Rectangle noserange = new Rectangle(faces[0].X + (faces[0].Width / 5) * 2, faces[0].Y + faces[0].Height / 2, faces[0].Width / 5, faces[0].Height / 6);//取鼻子範圍
+            nose.ROI = noserange;
+            nosegray.ROI = noserange;
+            nosegraytoBgr.ROI = noserange;
 
 
 
+            VectorOfVectorOfPoint contoursnose = new VectorOfVectorOfPoint();
+            CvInvoke.FindContours(nosegray, contoursnose, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+            int countnose = contoursnose.Size;
 
 
+            Rectangle first = Rectangle.Empty, second = Rectangle.Empty;//最大跟第二大物件的座標
+            for (int i = 0; i < countnose; i++)//找最大
+            {
+                using (VectorOfPoint contour = contoursnose[i])
+                {
 
+                    Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
+                    if (i == 0) { first = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > first.Width * first.Height) { first = BoundingBox; }
+                }
+            }
 
+            for (int i = 0; i < countnose; i++)//找第二大
+            {
+                using (VectorOfPoint contour = contoursnose[i])
+                {
 
+                    Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
+                    if (i == 0 && BoundingBox.X != first.X && BoundingBox.Y != first.Y) { second = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > second.Width * second.Height && BoundingBox.X != first.X && BoundingBox.Y != first.Y) { second = BoundingBox; }
+                }
+            }
 
-
-
-
+            if (first.X > second.X)//如果最大在右邊 交換
+            {
+                Rectangle temprect = first;
+                first = second;
+                second = temprect;
+            }
+            //鼻中心座標
+            Point centernose = new Point((first.X + first.Width / 2 + second.X + second.Width / 2) / 2 + (faces[0].X + (faces[0].Width / 5) * 2), (first.Y + first.Height / 2 + second.Y + second.Height / 2) / 2 + (faces[0].Y + faces[0].Height / 2));//左右鼻孔位置平均
 
 
 
@@ -1265,6 +1357,7 @@ namespace eyes
                 }
             }
             double facewidth = 0;
+            double faceheight = 0;
             using (VectorOfPoint contour = contours[maxarea])//找端點畫+號
             {
 
@@ -1281,23 +1374,23 @@ namespace eyes
                     points[j] = Point.Round(temp[j]);//PointF2Point
 
 
-                    if (j > 1 && points[j].X < left)
+                    if (j > 1 && points[j].X < left && points[j].Y == centernose.Y)
                     {
                         left = points[j].X;
                         leftpoint = j;
                     }
 
-                    if (j > 1 && points[j].X > right)
+                    if (j > 1 && points[j].X > right && points[j].Y == centernose.Y)
                     {
                         right = points[j].X;
                         rightpoint = j;
                     }
-                    if (j > 1 && points[j].Y < top)
+                    if (j > 1 && points[j].Y < top && points[j].X == centernose.X)
                     {
                         top = points[j].Y;
                         toppoint = j;
                     }
-                    if (j > 1 && points[j].Y > button)
+                    if (j > 1 && points[j].Y > button && points[j].X == centernose.X)
                     {
                         button = points[j].Y;
                         buttonpoint = j;
@@ -1310,9 +1403,11 @@ namespace eyes
                 sf.LineAlignment = StringAlignment.Center;
 
                 facewidth = Math.Sqrt(Math.Pow((points[leftpoint].X - points[rightpoint].X), 2) + Math.Pow((points[leftpoint].Y - points[rightpoint].Y), 2));
+                faceheight = Math.Sqrt(Math.Pow((points[toppoint].X - points[buttonpoint].X), 2) + Math.Pow((points[toppoint].Y - points[buttonpoint].Y), 2));
 
                 Graphics g2 = Graphics.FromImage(tempimg);
-                SolidBrush drawBrush = new SolidBrush(Color.Red);
+                SolidBrush drawBrush = new SolidBrush(Color.Green);
+                SolidBrush drawBrushY = new SolidBrush(Color.Green);
                 Pen redPen = new Pen(Color.Red, 3);
                 g2.DrawString("+", new Font("Arial", 25), drawBrush, points[leftpoint].X, points[leftpoint].Y, sf);//畫左點
                 g2.DrawString("+", new Font("Arial", 25), drawBrush, points[rightpoint].X, points[rightpoint].Y, sf);//畫右點
@@ -1320,6 +1415,10 @@ namespace eyes
                 g2.DrawString("+", new Font("Arial", 25), drawBrush, points[buttonpoint].X, points[buttonpoint].Y, sf);//畫下點
                 g2.DrawLine(redPen, points[leftpoint].X, points[leftpoint].Y, points[rightpoint].X, points[rightpoint].Y);//畫橫線
                 g2.DrawLine(redPen, points[toppoint].X, points[toppoint].Y, points[buttonpoint].X, points[buttonpoint].Y);//畫縱線
+                g2.DrawLine(redPen, centernose.X - 100, centernose.Y, centernose.X + 200, centernose.Y);//畫鼻子線
+                g2.DrawLine(redPen, points[toppoint].X - 100, points[toppoint].Y, points[toppoint].X + 200, points[toppoint].Y);//畫髮際線
+                g2.DrawLine(redPen, points[buttonpoint].X - 100, points[buttonpoint].Y, points[buttonpoint].X + 200, points[buttonpoint].Y);//畫下巴線
+                g2.DrawString("+", new Font("Arial", 25), drawBrushY, centernose.X, centernose.Y, sf);
                 g2.Dispose();
 
 
@@ -1330,6 +1429,10 @@ namespace eyes
                 g3.DrawString("+", new Font("Arial", 25), drawBrush, points[buttonpoint].X, points[buttonpoint].Y, sf);
                 g3.DrawLine(redPen, points[leftpoint].X, points[leftpoint].Y, points[rightpoint].X, points[rightpoint].Y);//畫橫線
                 g3.DrawLine(redPen, points[toppoint].X, points[toppoint].Y, points[buttonpoint].X, points[buttonpoint].Y);//畫縱線
+                g3.DrawLine(redPen, centernose.X - 200, centernose.Y, centernose.X + 200, centernose.Y);//畫鼻子線
+                g3.DrawLine(redPen, points[toppoint].X - 200, points[toppoint].Y, points[toppoint].X + 200, points[toppoint].Y);//畫髮際線
+                g3.DrawLine(redPen, points[buttonpoint].X - 200, points[buttonpoint].Y, points[buttonpoint].X + 200, points[buttonpoint].Y);//畫下巴線
+                g3.DrawString("+", new Font("Arial", 25), drawBrushY, centernose.X, centernose.Y, sf);
                 g3.Dispose();
 
                 Graphics g4 = Graphics.FromImage(tempeyebrowimg);
@@ -1339,6 +1442,10 @@ namespace eyes
                 g4.DrawString("+", new Font("Arial", 25), drawBrush, points[buttonpoint].X, points[buttonpoint].Y, sf);
                 g4.DrawLine(redPen, points[leftpoint].X, points[leftpoint].Y, points[rightpoint].X, points[rightpoint].Y);//畫橫線
                 g4.DrawLine(redPen, points[toppoint].X, points[toppoint].Y, points[buttonpoint].X, points[buttonpoint].Y);//畫縱線
+                g4.DrawLine(redPen, centernose.X - 200, centernose.Y, centernose.X + 200, centernose.Y);//畫鼻子線
+                g4.DrawLine(redPen, points[toppoint].X - 200, points[toppoint].Y, points[toppoint].X + 200, points[toppoint].Y);//畫髮際線
+                g4.DrawLine(redPen, points[buttonpoint].X - 200, points[buttonpoint].Y, points[buttonpoint].X + 200, points[buttonpoint].Y);//畫下巴線
+                g4.DrawString("+", new Font("Arial", 25), drawBrushY, centernose.X, centernose.Y, sf);
                 g4.Dispose();
 
             }
@@ -1353,12 +1460,20 @@ namespace eyes
 
 
 
-            imageBox2.Image = new Image<Bgr, byte>(tempeyebrowimg);
-            imageBox1.Image = facewh;
-            label1.Text = "臉的寬度 : " + (facewidth * mmperpixel).ToString("#0.00") + " mm";
-            label1.Visible = true;
+            imageBox2.Image = facewh;
+            imageBox1.Image = My_Image2;
+            
+            label40.Text = (faceheight * mmperpixel).ToString("#0.00") + " mm";//臉的高度
+            label41.Text = (facewidth * mmperpixel).ToString("#0.00") + " mm";//臉的寬度
+            label42.Text = (faceheight/facewidth).ToString("#0.0000") + " : 1";//臉的高寬比
+            label1.Visible = false;
             label2.Visible = false;
             label3.Visible = false;
+
+
+
+
+
         }
         private System.Drawing.Rectangle getPicRoiOld(ref Image<Bgr, byte> img)
         {
@@ -2299,6 +2414,7 @@ namespace eyes
             nose.Bitmap = tempcolorimg;
             nose.ROI = Rectangle.Empty;
             nosegraytoBgr.Bitmap = tempimg;
+
             nosegraytoBgr.ROI = Rectangle.Empty;
 
             imageBox1.Image = nose;
@@ -3411,16 +3527,6 @@ namespace eyes
 
 
         }
-
-        private void 眼部黑白ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ScleraPupil_ratio SPr = new ScleraPupil_ratio(My_Image2);
-            Bitmap[] imgs = SPr.GetEyesThreshold();
-            Image<Bgr, Byte>[] imgBgr = SPr.GetEyeImg(My_Image2);
-            imgs[0] = MyCV.BoundingBoxeyebrow(new Image<Gray, byte>(imgs[0]), imgBgr[0]);
-            imgs[1] = MyCV.BoundingBoxeyebrow(new Image<Gray, byte>(imgs[1]), imgBgr[1]);
-            imageBox5.Image = new Image<Bgr, Byte>(imgs[0]);
-            imageBox6.Image = new Image<Bgr,Byte>(imgs[1]);
-        }
+        
     }
 }
