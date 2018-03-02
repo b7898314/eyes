@@ -2336,10 +2336,16 @@ namespace eyes
             Ori_Image = My_Image2.Clone();
             Image<Gray, byte> otsuimg = new Image<Gray, byte>(Ori_Image.Width, Ori_Image.Height);
             CvInvoke.Threshold(Ori_Image.Convert<Gray, byte>(), otsuimg, 0, 255, ThresholdType.Otsu);
+            
+            // call getPicRoi() to set face region ROI
             Ori_Image.ROI = getPicRoi(ref Ori_Image, ref eyeshapedect);
             System.Drawing.Rectangle idk = Ori_Image.ROI;
+            // Resize ROI
             Ori_Image.ROI = new System.Drawing.Rectangle(idk.X, 0, idk.Width, My_Image2.Height);
+            // Declare a Gray Image with Ori_Image.ROI size (CopyBlank)
             Image<Gray, byte> idkwid = new Image<Gray, byte>(Ori_Image.Width, Ori_Image.Height);
+            
+            // Thresholding based on HSV , set the dark part as white , like pupils
             for (int i = 0; i < Ori_Image.Height; i++)
             {
                 for (int j = 0; j < Ori_Image.Width; j++)
@@ -2353,40 +2359,45 @@ namespace eyes
 
                 }
             }
-            Image<Gray, byte> f = idkwid.CopyBlank();
+            // fu : a copy of Ori_Image.ROI
             Image<Bgr, byte> fu = Ori_Image.Copy();
-            Image<Bgr, byte> fuc = fu.Clone();
-            Image<Gray, byte> fuck = idkwid.Clone(); ;
-            System.Drawing.Rectangle finROI = new System.Drawing.Rectangle(idk.X, 0, idk.Width, My_Image2.Height);
+            
+
             VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+
+            CvInvoke.FindContours(idkwid.Mat, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
+            
+
+            // parameter for contours
             MCvMoments moments;
             double area;
             MCvPoint2D64f center;
-            int nn;
-
-            CvInvoke.FindContours(idkwid.Mat, contours, null, RetrType.External, ChainApproxMethod.ChainApproxSimple);
-            idkwid = fuck.Clone();
-            nn = contours.Size;
-
             Dictionary<int, MCvPoint2D64f> c = new Dictionary<int, MCvPoint2D64f>();
-            for (int i = 0; i < nn; i++)
+            //
+
+            // Filter contours by area, add it to 'c' Dictionary
+            int areaThreshold = 500;
+            for (int i = 0; i < contours.Size; i++)
             {
                 area = CvInvoke.ContourArea(contours[i], false);
                 moments = CvInvoke.Moments(contours[i]);
                 center = moments.GravityCenter;
-                if (area > 500)
+                if (area > areaThreshold)
                 {
                     c.Add(i, center);
                 }
-                fuc.Draw(contours, i, new Bgr(Color.Red), 2);
-
             }
+            
+
+            //依據objDic.Value.Y , 按遞增順序排序序列中的項目
             var dicSort = from objDic in c orderby objDic.Value.Y ascending select objDic;
             int cou = 0;
-            PointF upmost = new PointF(), dnmost = new PointF();
+            PointF upmost = new PointF();
+            PointF dnmost = new PointF();
             int[] ebowlng = new int[2];
             KeyValuePair<int, MCvPoint2D64f>[] ebow = new KeyValuePair<int, MCvPoint2D64f>[2];
-            PointF[] leftmost = new PointF[2], rightmost = new PointF[2];
+            PointF[] leftmost = new PointF[2];
+            PointF[] rightmost = new PointF[2];
             foreach (var item in dicSort)
             {
                 if (cou == 1 || cou == 2)
@@ -2607,13 +2618,10 @@ namespace eyes
             //****end Lipps
 
 
-            doppff = true;
-
             imageBox1.Image = fu;
 
             imageBox1.Image =//Ori_Image.Convert<Gray, byte>();
                              fu;
-            //fuc;
             imageBox5.Image = new Image<Bgr, byte>("eyes\\n_0.png");
             imageBox6.Image = new Image<Bgr, byte>("eyes\\n_0.png");
 
@@ -2621,9 +2629,9 @@ namespace eyes
 
             Ori_Image.ROI = idk;
 
-
+            // Particle Filter method
+            doppff = true;
             weightlist = new List<KeyValuePair<double, basicparcitlt>>();
-
 
             maxw = double.MaxValue;
             timercounter = 0;
@@ -2634,8 +2642,8 @@ namespace eyes
             sum[1] = 0;
             sum[2] = 0;
             sum[3] = 0;
-            timer2.Enabled = true;
-            timer2.Start();
+            //timer2.Enabled = true;
+            //timer2.Start();
         }
         double[] sum = new double[4];
         Particle_parameter_for_fullimg ppff;
