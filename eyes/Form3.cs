@@ -34,6 +34,7 @@ namespace eyes
             webCam.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.FrameHeight, 675);
             webCam.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.Brightness, 160);
             webCam.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.Focus, 20);
+            webCam.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.XiAutoWb, 0);
 
             Application.Idle += Application_Idle;
         }
@@ -86,7 +87,7 @@ namespace eyes
             Form1.My_Image1 = My_Image1;
             Form1.My_Image2 = My_Image2;
             CascadeClassifier frontalface = new CascadeClassifier("haarcascade_frontalface_default.xml");
-            Rectangle[] faces = frontalface.DetectMultiScale(My_Image1, 1.1, 10, new Size(20, 20), Size.Empty);
+            Rectangle[] faces = frontalface.DetectMultiScale(My_Image1, 1.1, 5, new Size(200, 200), Size.Empty);
             
 
             List<Rectangle> face = new List<Rectangle>();

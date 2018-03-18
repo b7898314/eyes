@@ -86,7 +86,7 @@ namespace eyes
 
                             // 使用 BoundingRectangle 取得框選矩形
                             Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < gray.Height / 2)
+                            if ((BoundingBox.Width / BoundingBox.Height) > 1.0 && (BoundingBox.Width * BoundingBox.Height) > 500 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < gray.Height / 2)
                             {
 
 
@@ -107,7 +107,7 @@ namespace eyes
                             
                             // 使用 BoundingRectangle 取得框選矩形
                             Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000&& BoundingBox.Y<gray.Height/3)//過濾長寬比太小和面積太小的box
+                            if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 1000 && (BoundingBox.Width * BoundingBox.Height) < 7000&& BoundingBox.Y<gray.Height/3)//過濾長寬比太小和面積太小的box
                             //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                             {
                                 PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
@@ -281,7 +281,7 @@ namespace eyes
                     My_Image2 = new Image<Bgr, byte>(Openfile.FileName);
 
                     CascadeClassifier frontalface = new CascadeClassifier("haarcascade_frontalface_default.xml");
-                    faces = frontalface.DetectMultiScale(My_Image1, 1.1, 10, new Size(20, 20),Size.Empty);
+                    faces = frontalface.DetectMultiScale(My_Image1, 1.1, 5, new Size(200, 200),Size.Empty);
                     
                     
 
@@ -492,10 +492,11 @@ namespace eyes
                     int G = color.G;
                     int B = color.B;
                     float hue = color.GetHue();
+                    float S = color.GetSaturation();
                     double Y = 0.257 * R + 0.564 * G + 0.098 * B + 16;
                     double Cb = -0.148 * R - 0.291 * G + 0.439 * B + 128;
                     double Cr = 0.439 * R - 0.368 * G - 0.071 * B + 128;
-                    if (hue<=15)//另一個參數Cb>76&&Cb<127&&Cr>132&&Cr<173，Cb>101&&Cb<125&&Cr>130&&Cr<155
+                    if (Cb>=77&&Cb<=135&&Cr>=133&&Cr<=180)//另一個參數Cb>76&&Cb<127&&Cr>132&&Cr<173，Cb>101&&Cb<125&&Cr>130&&Cr<155
                     {
                         skin.SetPixel(x, y, Color.FromArgb(255, 255, 255));
                     }
@@ -515,18 +516,16 @@ namespace eyes
             
 
             Image<Gray, byte> facecutgray = new Image<Gray, byte>(facecutori.Bitmap);
-            facecutorigray.Bitmap = facecutorigray.SmoothMedian(9).Bitmap;
-            //Image<Gray, byte> Out = new Image<Gray, byte>(facecutorigray.Size);
-            CvInvoke.AdaptiveThreshold(facecutorigray, facecutorigray, 255, AdaptiveThresholdType.MeanC, ThresholdType.BinaryInv, 31, 2);
+            Image<Bgr, byte> skinuseimg = facecutori.Clone();
+            skinuseimg = skinuseimg.SmoothMedian(7);
 
-            //facecutorigray.ROI = Rectangle.Empty;
-            Bitmap image1 = new Bitmap(facecutori.Bitmap);
-            Bitmap skin = new Bitmap(facecutori.Bitmap);
-
+            Bitmap image1 = new Bitmap(skinuseimg.Bitmap);
+            Bitmap skin = new Bitmap(skinuseimg.Bitmap);
+            
             int w = facecutori.Bitmap.Width;
             int h = facecutori.Bitmap.Height;
 
-            for (int y = 0; y < h; y++)//find skin
+            for (int y = 0; y < h; y++)//find eyebrow
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -537,51 +536,30 @@ namespace eyes
                     float hue = color.GetHue();
                     float saturation = color.GetSaturation();
                     int A = color.A;
+                    
 
-                    if ((R > 95 && G > 40 && B > 20 && (R - B) > 15 && (R - G) > 15) || (R > 200 && G > 210 && B > 170 && (R - B) <= 15 && R > B && G > B))
+                    if (Math.Abs(R - G) <= 30 && Math.Abs(G - B) <= 30 && Math.Abs(R - B) <= 30 && (R + G + B) / 3 <= 170)
                     {
-                        skin.SetPixel(x, y, Color.FromArgb(0, 0, 0));
+                        skin.SetPixel(x, y, Color.FromArgb(255, 255, 255));
                     }
-                    else { skin.SetPixel(x, y, Color.FromArgb(255, 255, 255)); }
+                    else { skin.SetPixel(x, y, Color.FromArgb(0, 0, 0)); }
+
+                    //if ((color.GetHue() >= 70.0 || color.GetHue() == 0) && (color.GetSaturation() <= 0.25 || color.GetSaturation() >= 0.68) && color.GetBrightness() <= 0.70)
+                    //{
+                    //    skin.SetPixel(x, y, Color.FromArgb(255, 255, 255));
+                    //}
+                    //else { skin.SetPixel(x, y, Color.FromArgb(0, 0, 0)); }
 
                 }
             }
-
-            //for (int y = 0; y < h; y++)//find skin  YCbCr
-            //{
-            //    for (int x = 0; x < w; x++)
-            //    {
-            //        Color color = image1.GetPixel(x, y);
-            //        int R = color.R;
-            //        int G = color.G;
-            //        int B = color.B;
-            //        double Y = 0.257 * R + 0.564 * G + 0.098 * B + 16;
-            //        double Cb = -0.148 * R - 0.291 * G + 0.439 * B + 128;
-            //        double Cr = 0.439 * R - 0.368 * G - 0.071 * B + 128;
-            //        if (Cb > 85 && Cb < 135 && Cr > 135 && Cr < 180 && Y > 80)//另一個參數Cb>76&&Cb<127&&Cr>132&&Cr<173，Cb>101&&Cb<125&&Cr>130&&Cr<155
-            //        {
-            //            skin.SetPixel(x, y, Color.FromArgb(0, 0, 0));
-            //        }
-            //        else { skin.SetPixel(x, y, Color.FromArgb(255, 255, 255)); }
-
-            //    }
-            //}
-
-            //Image<Gray, float> Outfloat = Out.Convert<Gray, float>();//二值化後的照片轉float
-            Image<Gray, byte> faceskin = new Image<Gray, byte>(skin);
-            facecutorigray.Bitmap = facecutorigray.And(faceskin).Bitmap;
             
-            //Image<Gray, byte> skinsobelbyte = new Image<Gray, byte>(skinsobel.Bitmap);
 
             Image<Bgr, byte> DrawI = new Image<Bgr, byte>(facecutori.Bitmap);
-            //skinsobelbyte = skinsobelbyte.Dilate(2);
-            //MyCV.BoundingBox(skinsobelbyte, facecutori);
-
-            //facecutori.ROI = Rectangle.Empty;
-            MyCV.BoundingBoxeyebrow(facecutorigray, facecutori);
-            //imageBox2.Image = new Image<Bgr, byte>(MyCV.BoundingBox(facecutorigray, facecutori));
+            Image<Gray, byte> skinimg = new Image<Gray, byte>(skin);
+            
+            MyCV.BoundingBoxeyebrow(skinimg, facecutori);
             imageBox1.Image = facecutori;
-            imageBox2.Image = facecutorigray;
+            imageBox2.Image = skinimg;
 
 
         }
@@ -1013,19 +991,16 @@ namespace eyes
 
         private void toolStripMenuItem9_Click(object sender, EventArgs e)//ALL
         {
-            Point eyebrowcenterpoint;
+            Point eyebrowcenterpoint = Point.Empty;
+            
 
-            Image<Gray, byte> facecutgray = new Image<Gray, byte>(facecutori.Bitmap);
-            facecutorigray.Bitmap = facecutorigray.SmoothMedian(9).Bitmap;
-            //Image<Gray, byte> Out = new Image<Gray, byte>(facecutorigray.Size);
-            CvInvoke.AdaptiveThreshold(facecutorigray, facecutorigray, 255, AdaptiveThresholdType.MeanC, ThresholdType.BinaryInv, 31, 2);
+            Image<Bgr, byte> imageforskin = facecutori.Clone();
+            imageforskin = imageforskin.SmoothMedian(9);
+            Bitmap image1 = new Bitmap(imageforskin.Bitmap);
+            Bitmap skin = new Bitmap(imageforskin.Bitmap);
 
-            //facecutorigray.ROI = Rectangle.Empty;
-            Bitmap image1 = new Bitmap(facecutori.Bitmap);
-            Bitmap skin = new Bitmap(facecutori.Bitmap);
-
-            int w = facecutori.Bitmap.Width;
-            int h = facecutori.Bitmap.Height;
+            int w = imageforskin.Bitmap.Width;
+            int h = imageforskin.Bitmap.Height;
 
             for (int y = 0; y < h; y++)//find skin
             {
@@ -1039,26 +1014,25 @@ namespace eyes
                     float saturation = color.GetSaturation();
                     int A = color.A;
 
-                    if ((R > 95 && G > 40 && B > 20 && (R - B) > 15 && (R - G) > 15) || (R > 200 && G > 210 && B > 170 && (R - B) <= 15 && R > B && G > B))
+                    if ((color.GetHue() >= 70.0||color.GetHue()==0)&&(color.GetSaturation()<=0.25||color.GetSaturation()>=0.68) && color.GetBrightness()<=0.60)
                     {
-                        skin.SetPixel(x, y, Color.FromArgb(0, 0, 0));
+                        skin.SetPixel(x, y, Color.FromArgb(255, 255, 255));
                     }
-                    else { skin.SetPixel(x, y, Color.FromArgb(255, 255, 255)); }
+                    else { skin.SetPixel(x, y, Color.FromArgb(0, 0, 0)); }
 
                 }
             }
             
             
             Image<Gray, byte> faceskin = new Image<Gray, byte>(skin);
-            facecutorigray.Bitmap = facecutorigray.And(faceskin).Bitmap;
-            
+            faceskin = faceskin.Dilate(2);
 
             Image<Bgr, byte> DrawI = new Image<Bgr, byte>(facecutori.Bitmap);
 
             VectorOfVectorOfPoint contours1 = new VectorOfVectorOfPoint();
             
-                CvInvoke.FindContours(facecutorigray, contours1, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
-                Bitmap tempimg1 = new Bitmap(facecutorigray.Bitmap);
+                CvInvoke.FindContours(faceskin, contours1, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+                Bitmap tempimg1 = new Bitmap(faceskin.Bitmap);
                 Bitmap tempcolorimg1 = new Bitmap(facecutori.Bitmap);
 
                 int left1 = 2147483647, right1 = 0, top1 = 2147483647, button1 = 0;
@@ -1073,7 +1047,7 @@ namespace eyes
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                    if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < facecutorigray.Height / 3 )//過濾長寬比太小和面積太小的box                                                                                                                                                                //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
+                    if ((BoundingBox.Width / BoundingBox.Height) > 1.2 && (BoundingBox.Width * BoundingBox.Height) > 1000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < faceskin.Height / 3 )//過濾長寬比太小和面積太小的box                                                                                                                                                                //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                     {
                         lefteyebrow = i;
                     }
@@ -1088,7 +1062,7 @@ namespace eyes
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                    if ((BoundingBox.Width / BoundingBox.Height) > 1.5 && (BoundingBox.Width * BoundingBox.Height) > 2000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < facecutorigray.Height / 3 && i != lefteyebrow)//過濾長寬比太小和面積太小的box                                                                                                                                                                //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
+                    if ((BoundingBox.Width / BoundingBox.Height) > 1.2 && (BoundingBox.Width * BoundingBox.Height) > 1000 && (BoundingBox.Width * BoundingBox.Height) < 7000 && BoundingBox.Y < faceskin.Height / 3 && i != lefteyebrow)//過濾長寬比太小和面積太小的box                                                                                                                                                                //CvInvoke.DrawContours(draw, contours,i, new MCvScalar(255, 0, 255, 255),2);
                     {
                         righteyebrow = i;
                     }
@@ -1105,7 +1079,7 @@ namespace eyes
             
               using (VectorOfPoint contour = contours1[righteyebrow])
               {
-                if (contour!=null) {
+                if (contour!=null&& righteyebrow!=0) {
                     PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
                     PointF[] pts = CvInvoke.ConvexHull(temp, true);
                     Point[] points = new Point[temp.Length];
@@ -1190,7 +1164,7 @@ namespace eyes
 
             using (VectorOfPoint contour = contours1[lefteyebrow])
             {
-                if (contour != null)
+                if (contour != null&& lefteyebrow!=0)
                 {
                     PointF[] temp = Array.ConvertAll(contour.ToArray(), new Converter<Point, PointF>(Point2PointF));
                     PointF[] pts = CvInvoke.ConvexHull(temp, true);
@@ -1274,8 +1248,8 @@ namespace eyes
             leftpoint1 = 0; rightpoint1 = 0; toppoint1 = 0; buttonpoint1 = 0;
 
 
-            facecutorigray.Bitmap = tempimg1;
-                facecutorigray.ROI = Rectangle.Empty;
+            faceskin.Bitmap = tempimg1;
+            faceskin.ROI = Rectangle.Empty;
                 facecutori.Bitmap = tempcolorimg1;
                 facecutori.ROI = Rectangle.Empty;
 
@@ -1326,8 +1300,8 @@ namespace eyes
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                    if (i == 0 && BoundingBox.X != first.X && BoundingBox.Y != first.Y && Math.Abs(BoundingBox.Y - first.Y) < 5) { second = BoundingBox; }
-                    else if (BoundingBox.Width * BoundingBox.Height > second.Width * second.Height && BoundingBox.X != first.X && BoundingBox.Y != first.Y && Math.Abs(BoundingBox.Y - first.Y) < 5) { second = BoundingBox; }
+                    if (i == 0 && BoundingBox.X != first.X) { second = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > second.Width * second.Height && BoundingBox.X != first.X && BoundingBox.Y != first.Y ) { second = BoundingBox; }
                 }
             }
 
@@ -1347,7 +1321,7 @@ namespace eyes
             Image<Bgr, byte> hair = My_Image2.Clone();
             Image<Gray, byte> hairgray = new Image<Gray, byte>(My_Image1.Bitmap);
             //hairgray.ROI = facezoom;
-            hairgray = hairgray.ThresholdBinaryInv(new Gray(60), new Gray(255));
+            hairgray = hairgray.ThresholdBinaryInv(new Gray(80), new Gray(255));
 
             Bitmap imagetophair = new Bitmap(hairgray.Bitmap);
 
@@ -1494,6 +1468,397 @@ namespace eyes
                 faceright = new Point(points[rightpoint].X, points[rightpoint].Y);//臉右點
                 faceleft = new Point(points[leftpoint].X, points[leftpoint].Y);//臉左點
 
+
+
+
+
+
+
+
+                Image<Bgr, Byte> lips = My_Image2.Clone();
+                //lips = lips.SmoothGaussian(11);
+                Rectangle liprange = new Rectangle(centernose.X - 75, centernose.Y + 20, 150, faces[0].Height / 5);//用鼻中心取嘴唇範圍
+                lips.ROI = liprange;
+
+                Bitmap lipsHSV = new Bitmap(lips.Bitmap);
+
+                int w_hsv = lipsHSV.Width;
+                int h_hsv = lipsHSV.Height;
+
+                Bitmap hsvlipsbinary = new Bitmap(w_hsv, h_hsv);
+
+                for (int y = 0; y < h_hsv; y++)
+                {
+                    for (int x = 0; x < w_hsv; x++)
+                    {
+                        Color color = lipsHSV.GetPixel(x, y);
+                        int R = color.R;
+                        int G = color.G;
+                        int B = color.B;
+
+                        if (color.GetHue() <= 15 || color.GetHue() >= 334)
+                        {
+                            hsvlipsbinary.SetPixel(x, y, Color.FromArgb(255, 255, 255));
+                        }
+                        else { hsvlipsbinary.SetPixel(x, y, Color.FromArgb(0, 0, 0)); }
+                    }
+                }
+
+                Image<Gray, byte> LipshsvforFindContours = new Image<Gray, byte>(hsvlipsbinary);
+
+                VectorOfVectorOfPoint lipshsvVVP = new VectorOfVectorOfPoint();
+                CvInvoke.FindContours(LipshsvforFindContours, lipshsvVVP, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+
+                Rectangle biggestliphsv = Rectangle.Empty;
+                int biggestcontourliphsv = 0;
+                for (int i = 0; i < lipshsvVVP.Size; i++)//找最大
+                {
+                    using (VectorOfPoint contourbig = lipshsvVVP[i])
+                    {
+
+                        Rectangle BoundingBoxlip = CvInvoke.BoundingRectangle(contourbig);
+                        if (i == 0) { biggestliphsv = BoundingBoxlip; }
+                        else if (BoundingBoxlip.Width * BoundingBoxlip.Height > biggestliphsv.Width * biggestliphsv.Height) { biggestliphsv = BoundingBoxlip; biggestcontourliphsv = i; }
+                    }
+                }
+
+
+
+
+                Bitmap lipbitmap = new Bitmap(lips.Bitmap);
+
+                w = lipbitmap.Width;
+                h = lipbitmap.Height;
+                Bitmap imagelip = new Bitmap(lipbitmap);
+                Bitmap image2 = new Bitmap(w, h);
+
+                ///////////////////////////////////////////////////找鼻中心往下最黑的點
+                int darkpoint = 2147483647;
+                Point dark = new Point(0, 0);
+
+                for (int y = 0; y < h; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color color = lipbitmap.GetPixel(x, y);
+                        int R = color.R;
+                        int G = color.G;
+                        int B = color.B;
+
+                        if (R + G + B < darkpoint && x == w / 2 && y > biggestliphsv.Top && y < biggestliphsv.Bottom)
+                        {
+                            dark = new Point(x, y);
+                            darkpoint = R + G + B;
+                        }
+                    }
+                }
+
+
+
+
+                Stack<Point> stack = new Stack<Point>();
+                stack.Push(new Point(dark.X, dark.Y));
+
+
+                // 領域の開始点の色を領域条件とする
+                Color colour = lipbitmap.GetPixel(dark.X, dark.Y);
+
+                // 開始点をあらかじめStackに収めておく
+
+                while (stack.Count != 0)
+                {
+                    // 注目点を取り出す
+                    Point p = stack.Pop();
+
+                    // 注目点にまだマーカが付いていない場合
+                    if (image2.GetPixel(p.X, p.Y) != Color.FromArgb(255, 255, 255))
+                    {
+
+                        // マーカを付ける
+                        image2.SetPixel(p.X, p.Y, Color.FromArgb(255, 255, 255));
+                        int range = 60;
+                        // 右隣を見て、領域条件に合えばStackに収める
+                        if (p.X + 1 < imagelip.Width && Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).R - colour.R) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).G - colour.G) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).B - colour.B) < range)
+                        {
+                            stack.Push(new Point(p.X + 1, p.Y));
+                        }
+
+                        // 左隣を見て、領域条件に合えばStackに収める
+                        if (p.X - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).R - colour.R) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).G - colour.G) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).B - colour.B) < range)
+                        {
+                            stack.Push(new Point(p.X - 1, p.Y));
+                        }
+
+                        // 下を見て、領域条件に合えばStackに収める
+                        if (p.Y + 1 < imagelip.Height && Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).R - colour.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).G - colour.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).B - colour.B) < range)
+                        {
+                            stack.Push(new Point(p.X, p.Y + 1));
+                        }
+
+                        // 上を見て、領域条件に合えばStackに収める
+                        if (p.Y - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).R - colour.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).G - colour.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).B - colour.B) < range)
+                        {
+                            stack.Push(new Point(p.X, p.Y - 1));
+                        }
+                    }
+                }//Region growing
+
+                int lipleft = 2147483647, lipright = 0;
+                int lipleftpoint1 = 0, liprightpoint1 = 0;
+
+                Image<Gray, byte> lipsline = new Image<Gray, byte>(image2);//找嘴巴線的輪廓
+                VectorOfVectorOfPoint contourslipsline = new VectorOfVectorOfPoint();
+                CvInvoke.FindContours(lipsline, contourslipsline, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+                int countlipline = contourslipsline.Size;
+
+                Rectangle biggest = Rectangle.Empty;
+                int biggestcontour = 0;
+                for (int i = 0; i < countlipline; i++)//找最大
+                {
+                    using (VectorOfPoint contourbig = contourslipsline[i])
+                    {
+
+                        Rectangle BoundingBoxbig = CvInvoke.BoundingRectangle(contourbig);
+                        if (i == 0) { biggest = BoundingBoxbig; }
+                        else if (BoundingBoxbig.Width * BoundingBoxbig.Height > biggest.Width * biggest.Height) { biggest = BoundingBoxbig; biggestcontour = i; }
+                    }
+                }
+
+                VectorOfPoint contourlip = contourslipsline[biggestcontour];
+
+                PointF[] temp1 = Array.ConvertAll(contourlip.ToArray(), new Converter<Point, PointF>(Point2PointF));
+                PointF[] pts1 = CvInvoke.ConvexHull(temp1, true);
+                Point[] points1 = new Point[temp1.Length];
+
+                if (contourlip != null)
+                {
+                    for (int j = 0; j < temp1.Length; j++)//找左右端點
+                    {
+                        points1[j] = Point.Round(temp1[j]);//PointF2Point
+
+
+                        if (j > 1 && points1[j].X < lipleft)
+                        {
+                            lipleft = points1[j].X;
+                            lipleftpoint1 = j;
+                        }
+
+                        if (j > 1 && points1[j].X > lipright)
+                        {
+                            lipright = points1[j].X;
+                            liprightpoint1 = j;
+                        }
+                    }
+
+                    StringFormat sf1 = new StringFormat();//設定string置中，drawString才不會錯位
+                    sf1.Alignment = StringAlignment.Center;
+                    sf1.LineAlignment = StringAlignment.Center;
+
+                    Graphics gg = Graphics.FromImage(image2);
+                    SolidBrush drawBrush1 = new SolidBrush(Color.Green);
+                    Pen pengreen = new Pen(Color.Green, 3);
+                    gg.DrawString("+", new Font("Arial", 25), drawBrush1, points1[lipleftpoint1].X, points1[lipleftpoint1].Y, sf1);//畫左點
+                    gg.DrawString("+", new Font("Arial", 25), drawBrush1, points1[liprightpoint1].X, points1[liprightpoint1].Y, sf1);//畫右點
+                    gg.Dispose();
+                }
+
+
+
+
+                Point lipsleftpoint = new Point(points1[lipleftpoint1].X, points1[lipleftpoint1].Y);
+                Point lipsrightpoint = new Point(points1[liprightpoint1].X, points1[liprightpoint1].Y);
+
+                Point lipsleftpointori = new Point(points1[lipleftpoint1].X + liprange.X, points1[lipleftpoint1].Y + liprange.Y);
+                Point lipsrightpointori = new Point(points1[liprightpoint1].X + liprange.X, points1[liprightpoint1].Y + liprange.Y);
+
+                lipleft = 2147483647; lipright = 0;
+                lipleftpoint1 = 0; liprightpoint1 = 0;
+
+
+                Point[] lipscurve = { new Point(0, lipsleftpoint.Y), lipsleftpoint, dark, lipsrightpoint, new Point(w, lipsrightpoint.Y) };
+
+                Image<Bgr, byte> smooth = new Image<Bgr, byte>(lipbitmap);
+                smooth = smooth.SmoothGaussian(11);
+                lipbitmap = smooth.Bitmap;
+
+                Graphics gate = Graphics.FromImage(lipbitmap);//畫線區隔上下唇
+                Pen Penred = new Pen(Color.White, 1);
+                gate.DrawCurve(Penred, lipscurve);
+                gate.Dispose();
+
+
+
+
+
+                Stack<Point> stackuplip = new Stack<Point>();
+                stackuplip.Push(new Point(dark.X, dark.Y - 15));
+
+
+                // 領域の開始点の色を領域条件とする
+                Color colouruplip = lipbitmap.GetPixel(dark.X, dark.Y - 15);
+                Bitmap imageuplip = new Bitmap(w, h);
+                imagelip = new Bitmap(lipbitmap);
+                // 開始点をあらかじめStackに収めておく
+
+                while (stackuplip.Count != 0)
+                {
+                    // 注目点を取り出す
+                    Point p = stackuplip.Pop();
+
+                    // 注目点にまだマーカが付いていない場合
+                    if (imageuplip.GetPixel(p.X, p.Y) != Color.FromArgb(255, 0, 0))
+                    {
+
+                        // マーカを付ける
+                        imageuplip.SetPixel(p.X, p.Y, Color.FromArgb(255, 0, 0));
+                        int range = 200;int huerange = 10;
+                        // 右隣を見て、領域条件に合えばStackに収める
+                        if (p.X + 1 < imagelip.Width && Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).R - colouruplip.R) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).G - colouruplip.G) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).B - colouruplip.B) < range && (imagelip.GetPixel(p.X + 1, p.Y).GetHue() <= huerange || imagelip.GetPixel(p.X + 1, p.Y).GetHue() >= 300))
+                        {
+                            stackuplip.Push(new Point(p.X + 1, p.Y));
+                        }
+
+                        // 左隣を見て、領域条件に合えばStackに収める
+                        if (p.X - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).R - colouruplip.R) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).G - colouruplip.G) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).B - colouruplip.B) < range && (imagelip.GetPixel(p.X - 1, p.Y).GetHue() <= huerange || imagelip.GetPixel(p.X - 1, p.Y).GetHue() >= 300))
+                        {
+                            stackuplip.Push(new Point(p.X - 1, p.Y));
+                        }
+
+                        // 下を見て、領域条件に合えばStackに収める
+                        if (p.Y + 1 < imagelip.Height && Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).R - colouruplip.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).G - colouruplip.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).B - colouruplip.B) < range && (imagelip.GetPixel(p.X, p.Y + 1).GetHue() <= huerange || imagelip.GetPixel(p.X, p.Y + 1).GetHue() >= 300))
+                        {
+                            stackuplip.Push(new Point(p.X, p.Y + 1));
+                        }
+
+                        // 上を見て、領域条件に合えばStackに収める
+                        if (p.Y - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).R - colouruplip.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).G - colouruplip.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).B - colouruplip.B) < range && (imagelip.GetPixel(p.X, p.Y - 1).GetHue() <= huerange || imagelip.GetPixel(p.X, p.Y - 1).GetHue() >= 300))
+                        {
+                            stackuplip.Push(new Point(p.X, p.Y - 1));
+                        }
+
+
+                    }
+                }//Region growing
+
+
+
+                Stack<Point> stackdownlip = new Stack<Point>();
+                stackdownlip.Push(new Point(dark.X, dark.Y + 15));
+
+
+                // 領域の開始点の色を領域条件とする
+                Color colourdownlip = lipbitmap.GetPixel(dark.X, dark.Y + 15);
+                imagelip = new Bitmap(lipbitmap);
+                // 開始点をあらかじめStackに収めておく
+
+                while (stackdownlip.Count != 0)
+                {
+                    // 注目点を取り出す
+                    Point p = stackdownlip.Pop();
+
+                    // 注目点にまだマーカが付いていない場合
+                    if (imageuplip.GetPixel(p.X, p.Y) != Color.FromArgb(0, 255, 0))
+                    {
+
+                        // マーカを付ける
+                        imageuplip.SetPixel(p.X, p.Y, Color.FromArgb(0, 255, 0));
+                        int range = 200; int huerange = 10;
+                        // 右隣を見て、領域条件に合えばStackに収める
+                        if (p.X + 1 < imagelip.Width && Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).R - colourdownlip.R) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).G - colourdownlip.G) + Math.Abs(imagelip.GetPixel(p.X + 1, p.Y).B - colourdownlip.B) < range && (imagelip.GetPixel(p.X + 1, p.Y).GetHue() <= huerange || imagelip.GetPixel(p.X + 1, p.Y).GetHue() >= 300))
+                        {
+                            stackdownlip.Push(new Point(p.X + 1, p.Y));
+                        }
+
+                        // 左隣を見て、領域条件に合えばStackに収める
+                        if (p.X - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).R - colourdownlip.R) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).G - colourdownlip.G) + Math.Abs(imagelip.GetPixel(p.X - 1, p.Y).B - colourdownlip.B) < range && (imagelip.GetPixel(p.X - 1, p.Y).GetHue() <= huerange || imagelip.GetPixel(p.X - 1, p.Y).GetHue() >= 300))
+                        {
+                            stackdownlip.Push(new Point(p.X - 1, p.Y));
+                        }
+
+                        // 下を見て、領域条件に合えばStackに収める
+                        if (p.Y + 1 < imagelip.Height && Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).R - colourdownlip.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).G - colourdownlip.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y + 1).B - colourdownlip.B) < range && (imagelip.GetPixel(p.X, p.Y + 1).GetHue() <= huerange || imagelip.GetPixel(p.X, p.Y + 1).GetHue() >= 300))
+                        {
+                            stackdownlip.Push(new Point(p.X, p.Y + 1));
+                        }
+
+                        // 上を見て、領域条件に合えばStackに収める
+                        if (p.Y - 1 >= 0 && Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).R - colourdownlip.R) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).G - colourdownlip.G) + Math.Abs(imagelip.GetPixel(p.X, p.Y - 1).B - colourdownlip.B) < range && (imagelip.GetPixel(p.X, p.Y - 1).GetHue() <= huerange || imagelip.GetPixel(p.X, p.Y - 1).GetHue() >= 300))
+                        {
+                            stackdownlip.Push(new Point(p.X, p.Y - 1));
+                        }
+                    }
+                }//Region growing
+
+
+
+
+
+                Graphics g = Graphics.FromImage(lipbitmap);
+                SolidBrush drawBrushlip = new SolidBrush(Color.Red);
+                SolidBrush drawBrushgreen = new SolidBrush(Color.Green);
+                StringFormat sflip = new StringFormat();//設定string置中，drawString才不會錯位
+                sflip.Alignment = StringAlignment.Center;
+                sflip.LineAlignment = StringAlignment.Center;
+
+                g.DrawString("+", new Font("Arial", 25), drawBrushlip, dark.X, dark.Y, sflip);
+                g.DrawString("+", new Font("Arial", 25), drawBrushgreen, lipsleftpoint.X, lipsleftpoint.Y, sflip);
+                g.DrawString("+", new Font("Arial", 25), drawBrushgreen, lipsrightpoint.X, lipsrightpoint.Y, sflip);
+                g.DrawCurve(Penred, lipscurve);
+                g.Dispose();
+
+                lips.Bitmap = lipbitmap;
+
+
+
+
+                lips.ROI = Rectangle.Empty;
+                imageBox1.Image = lips;
+                
+                imageBox2.Image = new Image<Bgr, byte>(imageuplip);
+
+
+
+
+
+
+                for (int y = liprange.Y; y < liprange.Bottom; y++)//畫嘴唇
+                {
+                    for (int x = liprange.X; x < liprange.Right; x++)
+                    {
+                        Color color = imageuplip.GetPixel(x - liprange.X, y - liprange.Y);
+                        int R = color.R;
+                        int G = color.G;
+                        int B = color.B;
+
+                        if (color.R!=0||color.G!=0||color.B!=0)
+                        {
+                            tempcolorimg.SetPixel(x,y, color);
+                        }
+                    }
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 StringFormat sf = new StringFormat();//設定string置中，drawString才不會錯位
                 sf.Alignment = StringAlignment.Center;
                 sf.LineAlignment = StringAlignment.Center;
@@ -1532,6 +1897,8 @@ namespace eyes
                 g3.DrawLine(redPen, centernose.X - 200, eyebrowcenterpoint.Y, centernose.X + 200, eyebrowcenterpoint.Y);//畫眉毛線
                 g3.DrawString("+", new Font("Arial", 25), drawBrushY, centernose.X, centernose.Y, sf);//鼻中心點
                 g3.DrawString("+", new Font("Arial", 25), drawBrushY, eyebrowcenterpoint.X, eyebrowcenterpoint.Y, sf);//眉中心點
+                g3.DrawString("+", new Font("Arial", 25), drawBrushY, lipsleftpointori.X, lipsleftpointori.Y, sf);//嘴唇左點
+                g3.DrawString("+", new Font("Arial", 25), drawBrushY, lipsrightpointori.X, lipsrightpointori.Y, sf);//嘴唇右點
                 g3.Dispose();
 
                 Graphics g4 = Graphics.FromImage(tempeyebrowimg);
@@ -1548,22 +1915,40 @@ namespace eyes
                 g4.DrawString("+", new Font("Arial", 25), drawBrushY, eyebrowcenterpoint.X, eyebrowcenterpoint.Y, sf);//眉中心點
                 g4.Dispose();
                 facewhRange = new Rectangle(points[leftpoint].X, facetop.Y, points[rightpoint].X - points[leftpoint].X , points[buttonpoint].Y - facetop.Y );//寬高的範圍
+
+
+
+
+
+
             }
             left = 2147483647; right = 0; top = 2147483647; button = 0;
             leftpoint = 0; rightpoint = 0; toppoint = 0; buttonpoint = 0;
 
 
+
+
+
+
             skinimage.Bitmap = tempimg;
             skinimage.ROI = Rectangle.Empty;
             facewh.Bitmap = tempcolorimg;
-            facewh.ROI = Rectangle.Empty;
+
+
+
+
+
+
+
+
+            //facewh.ROI = Rectangle.Empty;
 
             //facewh.ROI = facewhRange;
-            
+
 
             imageBox2.Image = facewh;
             imageBox1.Image = My_Image2;
-            
+
             label40.Text = (faceheight * mmperpixel).ToString("#0.00") + " mm";//臉的高度
             label41.Text = (facewidth * mmperpixel).ToString("#0.00") + " mm";//臉的寬度
             label42.Text = (faceheight/facewidth).ToString("#0.0000") + " : 1";//臉的高寬比
@@ -2453,7 +2838,7 @@ namespace eyes
             
             //nosegray.ROI = faces[0];
 
-            nosegray = nosegray.ThresholdBinaryInv(new Gray(60),new Gray(255));
+            nosegray = nosegray.ThresholdBinaryInv(new Gray(80),new Gray(255));
             Image<Bgr, byte> nosegraytoBgr = nosegray.Convert<Bgr, byte>();
             //faces[0].X+faces[0].Width/2,faces[0].Y+faces[0].Height/2 中心點座標
             Rectangle noserange = new Rectangle(faces[0].X+ (faces[0].Width/5)*2, faces[0].Y+ faces[0].Height/2, faces[0].Width/5, faces[0].Height/7);//取鼻子範圍
@@ -2487,17 +2872,17 @@ namespace eyes
                 {
 
                     Rectangle BoundingBox = CvInvoke.BoundingRectangle(contour);
-                    if (i == 0 && BoundingBox.X != first.X && BoundingBox.Y != first.Y && Math.Abs(BoundingBox.Y - first.Y)<5) { second = BoundingBox; }
-                    else if (BoundingBox.Width * BoundingBox.Height > second.Width * second.Height && BoundingBox.X != first.X && BoundingBox.Y != first.Y && Math.Abs(BoundingBox.Y - first.Y) < 5) { second = BoundingBox; }
+                    if (i == 0 && BoundingBox.X != first.X ) { second = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > second.Width * second.Height && BoundingBox.X != first.X && BoundingBox.Y != first.Y ) { second = BoundingBox; }
                 }
             }
 
-            if (first.X > second.X)//如果最大在右邊 交換
-            {
-                Rectangle temprect = first;
-                first = second;
-                second = temprect;
-            }
+            //if (first.X > second.X)//如果最大在右邊 交換
+            //{
+            //    Rectangle temprect = first;
+            //    first = second;
+            //    second = temprect;
+            //}
 
             Point centernose = new Point((first.X + first.Width / 2 + second.X + second.Width / 2)/2, (first.Y + first.Height / 2 + second.Y + second.Height / 2) / 2);//左右鼻孔位置平均
 
@@ -2507,7 +2892,8 @@ namespace eyes
 
             Graphics g = Graphics.FromImage(tempimg);//畫左鼻孔中心點
             SolidBrush drawBrush = new SolidBrush(Color.Red);
-            g.DrawString("+", new Font("Arial", 25), drawBrush, first.X + first.Width / 2, first.Y + first.Height / 2, sf);
+            SolidBrush drawBrushG = new SolidBrush(Color.Green);
+            g.DrawString("+", new Font("Arial", 25), drawBrushG, first.X + first.Width / 2, first.Y + first.Height / 2, sf);
             g.DrawString("+", new Font("Arial", 25), drawBrush, second.X + second.Width / 2, second.Y + second.Height / 2, sf);
             g.DrawString("+", new Font("Arial", 25), drawBrush, centernose.X, centernose.Y, sf);
 
@@ -3711,7 +4097,7 @@ namespace eyes
             Image<Bgr, byte> hair = My_Image2.Clone();
             Image<Gray, byte> hairgray = new Image<Gray, byte>(My_Image1.Bitmap);
             //hairgray.ROI = facezoom;
-            hairgray = hairgray.ThresholdBinaryInv(new Gray(60), new Gray(255));
+            hairgray = hairgray.ThresholdBinaryInv(new Gray(80), new Gray(255));
 
             Bitmap image1 = new Bitmap(hairgray.Bitmap);
             Bitmap skin = new Bitmap(hairgray.Bitmap);
@@ -3839,16 +4225,61 @@ namespace eyes
             Rectangle liprange = new Rectangle(centernose.X - 75, centernose.Y+20, 150, faces[0].Height / 5);//用鼻中心取嘴唇範圍
             lips.ROI = liprange;
 
+            Bitmap lipsHSV = new Bitmap(lips.Bitmap);
+
+            int w_hsv = lipsHSV.Width;
+            int h_hsv = lipsHSV.Height;
+
+            Bitmap hsvlipsbinary = new Bitmap(w_hsv,h_hsv);
+
+            for (int y = 0; y < h_hsv; y++)
+            {
+                for (int x = 0; x < w_hsv; x++)
+                {
+                    Color color = lipsHSV.GetPixel(x, y);
+                    int R = color.R;
+                    int G = color.G;
+                    int B = color.B;
+
+                    if (color.GetHue() <= 10 || color.GetHue() >= 334)
+                    {
+                        hsvlipsbinary.SetPixel(x, y, Color.FromArgb(255, 255, 255));
+                    }
+                    else { hsvlipsbinary.SetPixel(x, y, Color.FromArgb(0, 0, 0)); }
+                }
+            }
+
+            Image<Gray, byte> LipshsvforFindContours = new Image<Gray, byte>(hsvlipsbinary);
+
+            VectorOfVectorOfPoint lipshsvVVP = new VectorOfVectorOfPoint();
+            CvInvoke.FindContours(LipshsvforFindContours, lipshsvVVP, null, RetrType.External, ChainApproxMethod.ChainApproxNone);
+
+            Rectangle biggestliphsv = Rectangle.Empty;
+            int biggestcontourliphsv = 0;
+            for (int i = 0; i < lipshsvVVP.Size; i++)//找最大
+            {
+                using (VectorOfPoint contourbig = lipshsvVVP[i])
+                {
+
+                    Rectangle BoundingBox = CvInvoke.BoundingRectangle(contourbig);
+                    if (i == 0) { biggestliphsv = BoundingBox; }
+                    else if (BoundingBox.Width * BoundingBox.Height > biggestliphsv.Width * biggestliphsv.Height) { biggestliphsv = BoundingBox; biggestcontourliphsv = i; }
+                }
+            }
+
+            
+
+
             Bitmap lipbitmap = new Bitmap(lips.Bitmap);
 
             int w = lipbitmap.Width;
             int h = lipbitmap.Height;
             Bitmap image1 = new Bitmap(lipbitmap);
-            Bitmap image2 = new Bitmap(w,h);
+            Bitmap image2 = new Bitmap(w, h);
 
             ///////////////////////////////////////////////////找鼻中心往下最黑的點
             int darkpoint = 2147483647;
-            Point dark = new Point(0,0);
+            Point dark = new Point(0, 0);
 
             for (int y = 0; y < h; y++)
             {
@@ -3859,15 +4290,15 @@ namespace eyes
                     int G = color.G;
                     int B = color.B;
 
-                    if (R + G + B < darkpoint && x == w/2)
+                    if (R + G + B < darkpoint && x == w / 2 && y > biggestliphsv.Top && y < biggestliphsv.Bottom)
                     {
-                        dark = new Point(x,y);
+                        dark = new Point(x, y);
                         darkpoint = R + G + B;
                     }
                 }
             }
 
-            
+
 
 
             Stack<Point> stack = new Stack<Point>();
@@ -3981,15 +4412,133 @@ namespace eyes
 
             Point lipsleftpoint = new Point(points[leftpoint1].X, points[leftpoint1].Y);
             Point lipsrightpoint = new Point(points[rightpoint1].X, points[rightpoint1].Y);
-
+            
             lipleft = 2147483647; lipright = 0;
             leftpoint1 = 0; rightpoint1 = 0;
+
+
+            Point[] lipscurve = { new Point(0,lipsleftpoint.Y),lipsleftpoint, dark, lipsrightpoint ,new Point(w, lipsrightpoint.Y) };
+
+            Image<Bgr, byte> smooth = new Image<Bgr, byte>(lipbitmap);
+            smooth = smooth.SmoothGaussian(11);
+            lipbitmap = smooth.Bitmap;
+
+            Graphics gate = Graphics.FromImage(lipbitmap);//畫線區隔上下唇
+            Pen Penred = new Pen(Color.White,1);
+            gate.DrawCurve(Penred, lipscurve);
+            gate.Dispose();
+
+
+
+
+
+            Stack<Point> stackuplip = new Stack<Point>();
+            stackuplip.Push(new Point(dark.X, dark.Y-15));
+
+
+            // 領域の開始点の色を領域条件とする
+            Color colouruplip = lipbitmap.GetPixel(dark.X, dark.Y-15);
+            Bitmap imageuplip = new Bitmap(w, h);
+            image1 = new Bitmap(lipbitmap);
+            // 開始点をあらかじめStackに収めておく
+
+            while (stackuplip.Count != 0)
+            {
+                // 注目点を取り出す
+                Point p = stackuplip.Pop();
+
+                // 注目点にまだマーカが付いていない場合
+                if (imageuplip.GetPixel(p.X, p.Y) != Color.FromArgb(255, 0, 0))
+                {
+
+                    // マーカを付ける
+                    imageuplip.SetPixel(p.X, p.Y, Color.FromArgb(255, 0, 0));
+                    int range = 200;
+                    // 右隣を見て、領域条件に合えばStackに収める
+                    if (p.X + 1 < image1.Width && Math.Abs(image1.GetPixel(p.X + 1, p.Y).R - colouruplip.R) + Math.Abs(image1.GetPixel(p.X + 1, p.Y).G - colouruplip.G) + Math.Abs(image1.GetPixel(p.X + 1, p.Y).B - colouruplip.B) < range && (image1.GetPixel(p.X + 1, p.Y).GetHue() <= 19|| image1.GetPixel(p.X + 1, p.Y).GetHue() >=300))
+                    {
+                        stackuplip.Push(new Point(p.X + 1, p.Y));
+                    }
+
+                    // 左隣を見て、領域条件に合えばStackに収める
+                    if (p.X - 1 >= 0 && Math.Abs(image1.GetPixel(p.X - 1, p.Y).R - colouruplip.R) + Math.Abs(image1.GetPixel(p.X - 1, p.Y).G - colouruplip.G) + Math.Abs(image1.GetPixel(p.X - 1, p.Y).B - colouruplip.B) < range && (image1.GetPixel(p.X - 1, p.Y).GetHue() <= 19 || image1.GetPixel(p.X - 1, p.Y).GetHue() >= 300))
+                    {
+                        stackuplip.Push(new Point(p.X - 1, p.Y));
+                    }
+
+                    // 下を見て、領域条件に合えばStackに収める
+                    if (p.Y + 1 < image1.Height && Math.Abs(image1.GetPixel(p.X, p.Y + 1).R - colouruplip.R) + Math.Abs(image1.GetPixel(p.X, p.Y + 1).G - colouruplip.G) + Math.Abs(image1.GetPixel(p.X, p.Y + 1).B - colouruplip.B) < range && (image1.GetPixel(p.X , p.Y + 1).GetHue() <= 19 || image1.GetPixel(p.X , p.Y + 1).GetHue() >= 300))
+                    {
+                        stackuplip.Push(new Point(p.X, p.Y + 1));
+                    }
+
+                    // 上を見て、領域条件に合えばStackに収める
+                    if (p.Y - 1 >= 0 && Math.Abs(image1.GetPixel(p.X, p.Y - 1).R - colouruplip.R) + Math.Abs(image1.GetPixel(p.X, p.Y - 1).G - colouruplip.G) + Math.Abs(image1.GetPixel(p.X, p.Y - 1).B - colouruplip.B) < range && (image1.GetPixel(p.X , p.Y - 1).GetHue() <= 19 || image1.GetPixel(p.X , p.Y - 1).GetHue() >= 300))
+                    {
+                        stackuplip.Push(new Point(p.X, p.Y - 1));
+                    }
+
+
+                }
+            }//Region growing
+
+
+
+            Stack<Point> stackdownlip = new Stack<Point>();
+            stackdownlip.Push(new Point(dark.X, dark.Y + 15));
+
+
+            // 領域の開始点の色を領域条件とする
+            Color colourdownlip = lipbitmap.GetPixel(dark.X, dark.Y + 15);
+            Bitmap imagelip = new Bitmap(w, h);
+            image1 = new Bitmap(lipbitmap);
+            // 開始点をあらかじめStackに収めておく
+
+            while (stackdownlip.Count != 0)
+            {
+                // 注目点を取り出す
+                Point p = stackdownlip.Pop();
+
+                // 注目点にまだマーカが付いていない場合
+                if (imageuplip.GetPixel(p.X, p.Y) != Color.FromArgb(0, 255, 0))
+                {
+
+                    // マーカを付ける
+                    imageuplip.SetPixel(p.X, p.Y, Color.FromArgb(0, 255, 0));
+                    int range = 200;
+                    // 右隣を見て、領域条件に合えばStackに収める
+                    if (p.X + 1 < image1.Width && Math.Abs(image1.GetPixel(p.X + 1, p.Y).R - colourdownlip.R) + Math.Abs(image1.GetPixel(p.X + 1, p.Y).G - colourdownlip.G) + Math.Abs(image1.GetPixel(p.X + 1, p.Y).B - colourdownlip.B) < range && (image1.GetPixel(p.X + 1, p.Y).GetHue() <= 16 || image1.GetPixel(p.X + 1, p.Y).GetHue() >= 300))
+                    {
+                        stackdownlip.Push(new Point(p.X + 1, p.Y));
+                    }
+
+                    // 左隣を見て、領域条件に合えばStackに収める
+                    if (p.X - 1 >= 0 && Math.Abs(image1.GetPixel(p.X - 1, p.Y).R - colourdownlip.R) + Math.Abs(image1.GetPixel(p.X - 1, p.Y).G - colourdownlip.G) + Math.Abs(image1.GetPixel(p.X - 1, p.Y).B - colourdownlip.B) < range && (image1.GetPixel(p.X - 1, p.Y).GetHue() <= 16 || image1.GetPixel(p.X - 1, p.Y).GetHue() >= 300))
+                    {
+                        stackdownlip.Push(new Point(p.X - 1, p.Y));
+                    }
+
+                    // 下を見て、領域条件に合えばStackに収める
+                    if (p.Y + 1 < image1.Height && Math.Abs(image1.GetPixel(p.X, p.Y + 1).R - colourdownlip.R) + Math.Abs(image1.GetPixel(p.X, p.Y + 1).G - colourdownlip.G) + Math.Abs(image1.GetPixel(p.X, p.Y + 1).B - colourdownlip.B) < range && (image1.GetPixel(p.X, p.Y + 1).GetHue() <= 16 || image1.GetPixel(p.X, p.Y + 1).GetHue() >= 300))
+                    {
+                        stackdownlip.Push(new Point(p.X, p.Y + 1));
+                    }
+
+                    // 上を見て、領域条件に合えばStackに収める
+                    if (p.Y - 1 >= 0 && Math.Abs(image1.GetPixel(p.X, p.Y - 1).R - colourdownlip.R) + Math.Abs(image1.GetPixel(p.X, p.Y - 1).G - colourdownlip.G) + Math.Abs(image1.GetPixel(p.X, p.Y - 1).B - colourdownlip.B) < range && (image1.GetPixel(p.X, p.Y - 1).GetHue() <= 16 || image1.GetPixel(p.X, p.Y - 1).GetHue() >= 300))
+                    {
+                        stackdownlip.Push(new Point(p.X, p.Y - 1));
+                    }
+                }
+            }//Region growing
+
+
+
 
 
             Graphics g = Graphics.FromImage(lipbitmap);
             SolidBrush drawBrush = new SolidBrush(Color.Red);
             SolidBrush drawBrushgreen = new SolidBrush(Color.Green);
-
             StringFormat sf = new StringFormat();//設定string置中，drawString才不會錯位
             sf.Alignment = StringAlignment.Center;
             sf.LineAlignment = StringAlignment.Center;
@@ -3997,6 +4546,7 @@ namespace eyes
             g.DrawString("+", new Font("Arial", 25), drawBrush, dark.X, dark.Y, sf);
             g.DrawString("+", new Font("Arial", 25), drawBrushgreen, lipsleftpoint.X, lipsleftpoint.Y, sf);
             g.DrawString("+", new Font("Arial", 25), drawBrushgreen, lipsrightpoint.X, lipsrightpoint.Y, sf);
+            g.DrawCurve(Penred, lipscurve);
             g.Dispose();
 
             lips.Bitmap = lipbitmap;
@@ -4006,8 +4556,8 @@ namespace eyes
 
             lips.ROI = Rectangle.Empty;
             imageBox1.Image = lips;
-
-            imageBox2.Image = new Image<Bgr,byte>(image2);
+        
+            imageBox2.Image = new Image<Bgr,byte>(imageuplip);
         }
     }
 }
